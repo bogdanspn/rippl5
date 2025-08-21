@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rippl5 :: Generative Ripple Gradients Exploration</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+</head>
+<body>
+    <!-- Inline SVG sprite for minimal icons -->
+    <svg xmlns="http://www.w3.org/2000/svg" class="svg-sprite">
+        <symbol id="icon-minus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14"/>
+        </symbol>
+        <symbol id="icon-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5v14"/>
+            <path d="M5 12h14"/>
+        </symbol>
+        <symbol id="icon-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v12"/>
+            <path d="M8 11l4 4 4-4"/>
+            <path d="M5 21h14"/>
+        </symbol>
+        <symbol id="icon-shuffle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Refresh circular arrow -->
+            <path d="M21 12a9 9 0 1 1-3.3-6.9"/>
+            <polyline points="21 3 21 9 15 9"/>
+        </symbol>
+        <symbol id="icon-fullscreen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+        </symbol>
+        <symbol id="icon-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </symbol>
+        <symbol id="icon-palette" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="13.5" cy="6.5" r=".5"/>
+            <circle cx="17.5" cy="10.5" r=".5"/>
+            <circle cx="8.5" cy="7.5" r=".5"/>
+            <circle cx="6.5" cy="12.5" r=".5"/>
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+        </symbol>
+    </svg>
+    <div class="canvas-container">
+        <!-- Device wireframes for non-fullscreen preview -->
+        <div class="device-wireframe laptop-wireframe">
+            <img src="images/laptop.svg" alt="Laptop wireframe" class="wireframe-svg">
+        </div>
+        <div class="device-wireframe mobile-wireframe">
+            <img src="images/mobile.svg" alt="Mobile wireframe" class="wireframe-svg">
+        </div>
+        
+        <canvas id="canvas"></canvas>
+    </div>
+    
+    <div class="floating-panel" id="floatingPanel">
+        <div class="panel-titlebar" id="panelTitlebar">
+            <div class="panel-header">
+                <h1 class="project-title"><img src="images/logo.svg" alt="Rippl5"></h1>
+            </div>
+            <div class="panel-controls">
+                <button class="panel-btn" id="btnRandom" title="Randomize" onclick="randomize()">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-shuffle"></use></svg>
+                </button>
+                <button class="panel-btn" id="btnDownload" title="Download PNG" onclick="exportImage()">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-download"></use></svg>
+                </button>
+                <button class="panel-btn" id="btnFullscreen" title="Fullscreen Preview" onclick="toggleFullscreenPreview()">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-fullscreen"></use></svg>
+                </button>
+                <button id="collapseBtn" class="panel-btn minimize-btn" title="Collapse" onclick="togglePanel()">
+                    <svg class="icon" aria-hidden="true"><use href="#icon-minus"></use></svg>
+                </button>
+            </div>
+        </div>
+        <div class="controls" id="controlsContent">
+            <div class="control-group export-group">
+                <h3>Controls</h3>
+                <div class="button-section">
+                    <button class="control-btn export-btn" onclick="exportImage()">Download PNG</button>
+                    <button class="control-btn randomize-btn" onclick="randomize()">Randomize</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <h3>Presets</h3>
+                <div class="control">
+                    <label for="presetSelect">Choose preset</label>
+                    <select id="presetSelect" class="preset-select" onchange="if(this.value) loadPreset(this.value)">
+                        <option value="">Select a preset...</option>
+                        <option value="cyberpunk">Cyberpunk</option>
+                        <option value="intense-torrent">Intense Torrent</option>
+                        <option value="ethereal">Ethereal</option>
+                        <option value="vintage">Vintage Film</option>
+                        <option value="copper-mineral">Copper Mineral</option>
+                        <option value="auroris-borealis">Auroris Borealis</option>
+                        <option value="energetic-fantasy">Energetic Fantasy</option>
+                        <option value="amethyst-harmony">Amethyst Harmony</option>
+                        <option value="lavender-swirly-swirl">Lavender Swirly Swirl</option>
+                        <option value="ocean-soot">Ocean Soot</option>
+                        <option value="neon">Neon Blast</option>
+                        <option value="ink-spiral">Ink Spiral</option>
+                        <option value="cosmic-maelstrom">Cosmic Maelstrom</option>
+                        <option value="cardinal-motion">Cardinal Motion</option>
+                        <option value="retro">Retro Wave</option>                        
+                        <option value="sunset">Sunset</option>
+                        <option value="cosmic">Cosmic</option>
+                        <option value="amethyst-flow">Amethyst Flow</option>
+                        <option value="ocean">Ocean</option>
+                        <option value="aurora">Aurora</option>
+                        <option value="blusteel-maelstrom">Blusteel Maelstrom</option>
+                        <option value="forest">Forest</option>
+                        <option value="tidal-waltz">Tidal Waltz</option>
+                        <option value="coral">Coral Reef</option>
+                        <option value="lavender">Lavender</option>
+                        <option value="breathing-current">Breathing Current</option>
+                        <option value="citrus">Citrus</option>
+                        <option value="midnight">Midnight</option>
+                        <option value="peach">Peach Fuzz</option>
+                        <option value="fire-serpent">Fire Serpent</option>
+                        <option value="emerald">Emerald</option>
+                        <option value="rose">Rose Gold</option>
+                        <option value="azure">Azure Sky</option>
+                        <option value="arctic-pulse">Arctic Pulse</option>
+                        <option value="charcoal">Charcoal</option>
+                        <option value="slate">Slate Blue</option>
+                        <option value="graphite">Graphite</option>
+                        <option value="film-noir">Film Noir</option>
+                        <option value="violet-flow">Violet Flow</option>
+                        <option value="storm">Storm</option>
+                        <option value="carbon">Carbon</option>
+                        <option value="bluecurl-shimmer">Bluecurl Shimmer</option>
+                        <option value="pewter">Pewter</option>
+                        <option value="wild-blend">Wild Blend</option>
+                        <option value="dusk">Dusk</option>
+                        <option value="turbulent-skies">Turbulent Skies</option>
+                        <option value="grainy-film">Grainy Film</option>
+                        <option value="phase-shift">Phase Shift</option>
+                        <option value="directional-flow">Directional Flow</option>
+                        <option value="chaos-storm">Chaos Storm</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Resolution</h3>
+                <div class="control">
+                    <label for="resolution">Output Size</label>
+                    <select id="resolution" onchange="updateResolution()">
+                        <option value="1920,1080">1920×1080 (Full HD)</option>
+                        <option value="2560,1440">2560×1440 (2K)</option>
+                        <option value="3840,2160" selected>3840×2160 (4K)</option>
+                        <option value="5120,2880">5120×2880 (5K)</option>
+                        <option value="1080,1920">1080×1920 (Mobile)</option>
+                        <option value="1440,2560">1440×2560 (Mobile 2K)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="section-header">
+                    <h3>Colors</h3>
+                    <button class="section-btn" id="btnRandomizeColors" title="Randomize Colors" onclick="randomizeColorsOnly()" onmousedown="this.blur()">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-palette"></use></svg>
+                    </button>
+                </div>
+                <div class="color-grid">
+                    <div class="color-control">
+                        <label for="color1">01 (TL)</label>
+                        <input type="color" id="color1" value="#1e3c72" oninput="updateUniforms()">
+                    </div>
+                    <div class="color-control">
+                        <label for="color2">02 (TR)</label>
+                        <input type="color" id="color2" value="#2a5298" oninput="updateUniforms()">
+                    </div>
+                    <div class="color-control">
+                        <label for="color3">03 (BR)</label>
+                        <input type="color" id="color3" value="#ff6b6b" oninput="updateUniforms()">
+                    </div>
+                    <div class="color-control">
+                        <label for="color4">04 (BL)</label>
+                        <input type="color" id="color4" value="#feca57" oninput="updateUniforms()">
+                    </div>
+                    <div class="color-control">
+                        <label for="color5">05 (T)</label>
+                        <input type="color" id="color5" value="#4a69bd" oninput="updateUniforms()">
+                    </div>
+                    <div class="color-control">
+                        <label for="color6">06 (R)</label>
+                        <input type="color" id="color6" value="#e55039" oninput="updateUniforms()">
+                    </div>
+                    <div class="color-control">
+                        <label for="color7">07 (B)</label>
+                        <input type="color" id="color7" value="#fa983a" oninput="updateUniforms()">
+                    </div>
+                    <div class="color-control">
+                        <label for="color8">08 (L)</label>
+                        <input type="color" id="color8" value="#3c6382" oninput="updateUniforms()">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group wave-controls">
+                <h3>Wave Pattern</h3>
+                <div class="control-grid">
+                    <div class="control">
+                        <label for="waveCount">WCount <span class="value-display" id="waveCountValue">5</span></label>
+                        <input type="range" id="waveCount" min="4" max="16" value="5" step="1" oninput="updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="waveAmplitude">WInt <span class="value-display" id="waveAmplitudeValue">1.50</span></label>
+                        <input type="range" id="waveAmplitude" min="0.0" max="10.0" value="1.50" step="0.05" oninput="updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="waveZoom">WZoom <span class="value-display" id="waveZoomValue">4.5</span></label>
+                        <input type="range" id="waveZoom" min="0.1" max="12.0" value="4.5" step="0.1" oninput="updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="waveFrequency">WFreq <span class="value-display" id="waveFrequencyValue">1.0</span></label>
+                        <input type="range" id="waveFrequency" min="0.1" max="3.0" value="1.0" step="0.1" oninput="updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="waveTwirl">Twirl <span class="value-display" id="waveTwirlValue">0.050</span></label>
+                        <input type="range" id="waveTwirl" min="0.000" max="0.200" value="0.050" step="0.001" oninput="updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="twirlSources">TSrc <span class="value-display" id="twirlSourcesValue">2</span></label>
+                        <input type="range" id="twirlSources" min="1" max="6" value="2" step="1" oninput="if(document.getElementById('twirlLocation').value === '1') regenerateTwirlPositions(); updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="twirlLocation">TLoc</label>
+                        <select id="twirlLocation" onchange="if(this.value === '1') regenerateTwirlPositions(); updateUniforms()">>
+                            <option value="0">Center</option>
+                            <option value="1" selected>Random</option>
+                            <option value="2">Corners</option>
+                        </select>
+                    </div>
+                    <div class="control full-width">
+                        <label for="waveSpeed">WSpeed (ASpeed) <span class="value-display" id="waveSpeedValue">1.0</span></label>
+                        <input type="range" id="waveSpeed" min="0.0" max="3.0" value="1.0" step="0.1" oninput="updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="phaseRandomness">Phase Rand <span class="value-display" id="phaseRandomnessValue">0.0</span></label>
+                        <input type="range" id="phaseRandomness" min="0" max="3" step="0.1" value="0" oninput="updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="directionDrift">Dir Drift <span class="value-display" id="directionDriftValue">0.0</span></label>
+                        <input type="range" id="directionDrift" min="0" max="2" step="0.1" value="0" oninput="updateUniforms()">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Special FX</h3>
+                <div class="control-grid">
+                    <div class="control">
+                        <label for="turbulence">Turbulence <span class="value-display" id="turbulenceValue">0.00</span></label>
+                        <input type="range" id="turbulence" min="0" max="1" step="0.01" value="0" oninput="updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="noiseDisplacement">Noise Disp <span class="value-display" id="noiseDisplacementValue">0.00</span></label>
+                        <input type="range" id="noiseDisplacement" min="0" max="0.5" step="0.01" value="0" oninput="updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="amplitudeVariation">Amp Var <span class="value-display" id="amplitudeVariationValue">0.00</span></label>
+                        <input type="range" id="amplitudeVariation" min="0" max="3" step="0.05" value="0" oninput="updateUniforms()">
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="control-group">
+                <h3>Blend Mode</h3>
+                <div class="control">
+                    <label for="blendMode">Color Blending</label>
+                    <select id="blendMode" onchange="updateUniforms()">
+                        <option value="0">Smooth</option>
+                        <option value="1">Multiply</option>
+                        <option value="2">Screen</option>
+                        <option value="3">Overlay</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Filmic Effects</h3>
+                <div class="control">
+                     <label for="filmEffect">Effect</label> 
+                    <select id="filmEffect" onchange="updateUniforms()">
+                        <option value="0">None</option>
+                        <option value="1">Film Noise</option>
+                        <option value="2">Filmic Tone Mapping</option>
+                        <option value="3">Chromatic Aberration</option>
+                        <option value="4">Bloom</option>
+                        <option value="5">Lens Distortion</option>
+                        <option value="6">Pixelation</option>
+                        <option value="7">Trail/Motion Blur</option>
+                        <option value="8">Watercolor Bleeding</option>
+                    </select>
+                </div>
+                <div class="control" id="filmNoiseControl">
+                    <label for="filmNoiseIntensity">Noise Intensity <span class="value-display" id="filmNoiseIntensityValue">0.200</span></label>
+                    <input type="range" id="filmNoiseIntensity" min="0" max="0.4" step="0.001" value="0.200" oninput="updateUniforms()">
+                </div>
+                <div class="control" id="bloomControl">
+                    <label for="bloomIntensity">Bloom Intensity <span class="value-display" id="bloomIntensityValue">0.25</span></label>
+                    <input type="range" id="bloomIntensity" min="0" max="1" step="0.01" value="0.25" oninput="updateUniforms()">
+                </div>
+                <div class="control" id="caControl">
+                    <label for="caAmount">Chromatic Aberration Amount <span class="value-display" id="caAmountValue">0.002</span></label>
+                    <input type="range" id="caAmount" min="0" max="0.02" step="0.0005" value="0.002" oninput="updateUniforms()">
+                </div>
+                <div class="control" id="lensDistortionControl">
+                    <label for="lensDistortion">Lens Distortion <span class="value-display" id="lensDistortionValue">0.0</span></label>
+                    <!-- Expanded range to allow stronger barrel/pincushion distortions -->
+                    <input type="range" id="lensDistortion" min="-2.0" max="2.0" step="0.01" value="0.0" oninput="updateUniforms()">
+                </div>
+                <div class="control" id="pixelationControl">
+                    <label for="pixelationSize">Pixelation Size <span class="value-display" id="pixelationSizeValue">1.0</span></label>
+                    <input type="range" id="pixelationSize" min="1.0" max="50.0" step="0.5" value="1.0" oninput="updateUniforms()">
+                </div>
+                <div class="control" id="trailBlurControl">
+                    <label for="trailBlur">Trail Blur <span class="value-display" id="trailBlurValue">0.0</span></label>
+                    <input type="range" id="trailBlur" min="0.0" max="1.0" step="0.01" value="0.0" oninput="updateUniforms()">
+                </div>
+                <div class="control" id="watercolorControl">
+                    <label for="watercolor">Watercolor Bleeding <span class="value-display" id="watercolorValue">0.0</span></label>
+                    <input type="range" id="watercolor" min="0.0" max="1.0" step="0.01" value="0.0" oninput="updateUniforms()">
+                </div>
+                <div class="control" id="toneMappingControl">
+                    <label for="toneMappingLUT">Tone Mapping LUT</label>
+                    <select id="toneMappingLUT" onchange="updateUniforms()">
+                        <option value="0">ACES (Filmic)</option>
+                        <option value="1">Reinhard</option>
+                        <option value="2">Uncharted 2</option>
+                        <option value="3">Cinematic</option>
+                        <option value="4">Warm Film</option>
+                        <option value="5">Cool Film</option>
+                        <option value="6">High Contrast</option>
+                        <option value="7">Vintage</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Basic Adjustments</h3>
+                <div class="control-grid">
+                    <div class="control">
+                        <label for="brightness">Brightness <span class="value-display" id="brightnessValue">0.00</span></label>
+                        <input type="range" id="brightness" min="-0.5" max="0.5" step="0.01" value="0" oninput="updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="contrast">Contrast <span class="value-display" id="contrastValue">1.50</span></label>
+                        <input type="range" id="contrast" min="0.2" max="3.0" step="0.01" value="1.5" oninput="updateUniforms()">
+                    </div>
+                    <div class="control">
+                        <label for="saturation">Saturation <span class="value-display" id="saturationValue">1.50</span></label>
+                        <input type="range" id="saturation" min="0" max="3.0" step="0.01" value="1.5" oninput="updateUniforms()">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Preset Code 
+                    <button class="panel-btn copy-preset-btn" title="Copy Preset Code" onclick="copyPresetCode()">
+                        <svg class="icon" aria-hidden="true"><use href="#icon-copy"></use></svg>
+                    </button>
+                </h3>
+                <div class="preset-code-container">
+                    <textarea id="presetCode" readonly rows="10" class="preset-code-textarea" 
+                              title="Generated preset code for current settings" 
+                              placeholder="Preset code will appear here..."></textarea>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Bottom panel for resize handle -->
+        <div class="panel-bottom">
+            <div class="resize-handle" id="resizeHandle"></div>
+        </div>
+    </div>
+    
+    <!-- Credits and palette name overlay -->
+    <div class="overlay-container">
+        <div class="credits-links">
+            <a href="https://bogdanrosu.net" class="credit-link" rel="noopener" target="_blank">
+                <img src="images/pixel-crusher.svg" alt="Pixel Crusher" class="credit-icon">
+            </a>
+            <a href="https://bogdanrosu.com" class="credit-link" rel="noopener" target="_blank">
+                <img src="images/br.svg" alt="Bogdan Rosu" class="credit-icon">
+            </a>
+        </div>
+        <div class="palette-name-overlay" id="paletteNameOverlay">Untitled</div>
+    </div>
+
+    <script src="js/presets.js" defer></script>
+    <script src="js/palette-names.js" defer></script>
+    <script src="js/main.js" defer></script>
+</body>
+</html>

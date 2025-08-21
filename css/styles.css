@@ -1,0 +1,895 @@
+/* Load JetBrains Mono from Google Fonts (falls back to system monospace if unavailable) */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Segoe UI Mono', 'Courier New', monospace;
+    background: #0a0a0a;
+    color: #ffffff;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+}
+
+/* Full-screen canvas container */
+.canvas-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #1e3c72, #2a5298, #ff6b6b, #feca57);
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+/* Device wireframes */
+.device-wireframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.wireframe-svg {
+    height: 90vh;     /* Use almost full viewport height */
+    width: auto;      /* Maintain aspect ratio */
+    max-width: 95vw;  /* Don't exceed viewport width */
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+    display: block;
+}
+
+/* Device wireframes - opacity controlled by JavaScript based on resolution */
+
+/* Hide wireframes in fullscreen mode */
+.canvas-container.fullscreen-preview .device-wireframe {
+    opacity: 0 !important;
+}
+
+/* Canvas positioning for wireframe alignment */
+.canvas-container:not(.fullscreen-preview) canvas {
+    position: absolute;
+    z-index: 3;
+    /* Default positioning - will be adjusted by JavaScript */
+}
+
+/* Hidden SVG sprite container */
+.svg-sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+}
+
+/* Animated gradient background */
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Floating panel */
+.floating-panel {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: auto;
+    min-width: 380px;
+    max-width: none; /* Remove width constraint for very wide panels */
+    min-height: 200px;
+    max-height: 95vh;
+    background: rgba(20, 20, 20, 0.75);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Panel titlebar for dragging */
+.panel-titlebar {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: move;
+    -webkit-user-select: none;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(30, 30, 30, 0.8);
+    border-radius: 2px 2px 0 0;
+    min-height: 36px;
+    box-sizing: border-box;
+    flex: 0 0 auto;
+}
+
+.panel-controls {
+    display: flex;
+    gap: 5px;
+}
+
+.panel-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s ease, color 0.12s ease, transform 0.08s ease;
+}
+
+.panel-btn:hover,
+.panel-btn:focus {
+    /* Invert colors on hover/focus: dark background with light icon/text */
+    background: #ffffff;
+    color: #0a0a0a;
+    outline: none;
+}
+
+/* Remove any shadow/raise effects - keep flat UI */
+.panel-btn:active {
+    transform: none;
+}
+
+/* Fullscreen button active state when fullscreen mode is engaged */
+body.fullscreen-mode #btnFullscreen {
+    background: #ffffff;
+    color: #0a0a0a;
+}
+
+/* Icon sizing for titlebar buttons */
+.panel-btn .icon {
+    width: 14px;
+    height: 14px;
+    display: block;
+}
+
+/* Controls content area */
+.controls {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+    /* Default to flexbox - will be overridden by masonry classes */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Single column layout by default - sections stack vertically */
+.control-group {
+    margin-bottom: 12px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Panel width-based layout classes */
+
+/* Stacking layout for narrow panels */
+.floating-panel.panel-narrow .controls {
+    display: flex;
+    flex-direction: column;
+}
+
+.floating-panel.panel-narrow .control-group {
+    margin-bottom: 15px;
+}
+
+/* Masonry layout for wide panels using CSS Columns */
+.floating-panel.panel-wide .controls {
+    display: block;
+    column-width: 280px;
+    column-gap: 12px;
+}
+
+.floating-panel.panel-wide .control-group {
+    break-inside: avoid;
+    margin-bottom: 12px;
+}
+
+/* Force stacking for narrow panels */
+.floating-panel.panel-narrow .controls {
+    display: flex !important;
+    flex-direction: column !important;
+    columns: auto !important;
+}
+
+.floating-panel.panel-narrow .control-group {
+    display: block !important;
+}
+
+/* Panel bottom section for resize handle */
+.panel-bottom {
+    position: relative;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.015);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-shrink: 0; /* Prevent shrinking when content overflows */
+}
+
+/* Resize handle */
+.resize-handle {
+    width: 12px;
+    height: 12px;
+    background: linear-gradient(-45deg, 
+        transparent 30%, 
+        rgba(255, 255, 255, 0.25) 30%, 
+        rgba(255, 255, 255, 0.25) 40%, 
+        transparent 40%, 
+        transparent 50%, 
+        rgba(255, 255, 255, 0.25) 50%, 
+        rgba(255, 255, 255, 0.25) 60%, 
+        transparent 60%);
+    cursor: nwse-resize;
+    border-bottom-right-radius: 6px;
+    margin-right: 2px;
+    margin-bottom: 1px;
+    flex-shrink: 0;
+}
+
+.panel-header {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.project-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    letter-spacing: -0.05em;
+    text-transform: lowercase;
+    margin: 0;
+    line-height: 1;
+}
+
+.project-title img {
+    height: 20px;
+    width: auto;
+}
+
+
+
+canvas {
+    max-width: 100%;
+    max-height: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+
+
+
+/* Responsive grid for controls - prefer wider layout */
+.control-group .control {
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px; /* Tight spacing between label and input for all controls */
+}
+
+/* Override the label margin for better control */
+.control > label {
+    margin-bottom: 0; /* Remove margin, use flex gap instead */
+}
+
+/* Grid layout for Wave Pattern section to use width better */
+.wave-controls .control-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.wave-controls .control.full-width {
+    grid-column: 1 / -1;
+}
+
+.color-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.color-control {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* left align label + swatch */
+    gap: 6px;
+    width: 100%;
+}
+
+.color-control label {
+    font-size: 12px;
+    color: #dcdcdc;
+    width: 100%;
+    text-align: left;
+    display:none;
+}
+
+.color-control input[type="color"] {
+    width: 100%; /* fill the grid cell */
+    height: 40px;
+    padding: 4px;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Labels inside .control show the label text on the left and the numeric value on the right */
+.control > label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* label text left, value right */
+    gap: 8px;
+    color: #cccccc;
+    font-size: 12px;
+    margin-bottom: 0; /* Remove margin, use flex gap on parent instead */
+}
+
+input[type="range"] {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    outline: none;
+    border-radius: 2px;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Style the color swatch inside the input */
+input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+}
+
+input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Firefox color picker styling */
+input[type="color"]::-moz-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+/* Hover effect for color inputs */
+input[type="color"]:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+/* Focus state */
+input[type="color"]:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+/* Additional dark theme integration */
+.color-control {
+    position: relative;
+}
+
+.color-control input[type="color"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Unified select styling - use the same UI font and appearance */
+select,
+.preset-select {
+    width: 100%;
+    padding: 4px 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 2px;
+    color: #ffffff;
+    font-size: 12px; /* user's requested size */
+    /* inherit body font (JetBrains Mono) */
+    font-family: inherit;
+    line-height: 1;
+    height: 32px; /* explicit height helps consistent rendering across platforms */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px 12px;
+    padding-right: 36px;
+}
+
+select option,
+.preset-select option {
+    background: #2a2a2a;
+    color: #ffffff;
+}
+
+/* Focus styles: replace bright white outline with a subtle dimmed grey ring */
+select:focus,
+.preset-select:focus,
+select:focus-visible,
+.preset-select:focus-visible {
+    outline: none; /* remove default focus ring */
+    border-color: rgba(255,255,255,0.18);
+    
+}
+
+/* On active/click keep the subtle appearance */
+select:active,
+.preset-select:active {
+    border-color: rgba(255,255,255,0.18);
+}
+.preset-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 15px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+
+.preset-btn {
+    padding: 8px 12px;
+    background: rgba(200, 200, 200, 0.12); /* mid grey */
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 2px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 12px;
+    transition: transform 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.preset-btn:hover {
+    background: #ffffff;
+    color: #0a0a0a;
+}
+
+/* ...existing code... */
+
+.value-display {
+    display: inline-block;
+    min-width: 44px; /* reserve space and keep numbers aligned */
+    text-align: right;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #ffffff;
+}
+
+/* Custom scrollbar styling */
+.controls::-webkit-scrollbar {
+    width: 12px;
+}
+
+.controls::-webkit-scrollbar-track {
+    background: rgba(10, 10, 10, 0.5);
+    border-radius: 0 8px 8px 0;
+}
+
+.controls::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+}
+
+.controls::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Firefox scrollbar */
+.controls {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(10, 10, 10, 0.5);
+}
+
+/* Collapsed panel state */
+.floating-panel.panel-collapsed {
+    overflow: hidden !important; /* Ensure no content spills out */
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;     /* Remove base min-height:200px */
+    max-height: none !important;   /* Remove base max-height:80vh */
+}
+
+.floating-panel.panel-collapsed .panel-titlebar {
+    border-bottom: none !important; /* Remove divider line in collapsed */
+    border-radius: 2px !important;  /* Full radius when collapsed */
+    flex: 0 0 auto !important;      /* Do not let titlebar grow */
+    padding: 8px 10px !important;   /* Ensure consistent padding */
+    min-height: 36px !important;    /* Ensure consistent height */
+    box-sizing: border-box !important; /* Ensure consistent box model */
+}
+
+/* Hide all non-titlebar children when collapsed */
+.floating-panel.panel-collapsed > :not(.panel-titlebar) {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+.panel-header {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.project-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    letter-spacing: -0.05em;
+    text-transform: lowercase;
+    margin: 0;
+    line-height: 1;
+}
+
+.project-title img {
+    height: 20px;
+    width: auto;
+}
+
+
+
+canvas {
+    max-width: 100%;
+    max-height: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.palette-name-overlay {
+    position: fixed;
+    color: rgba(6, 6, 6, 0.5);
+    font-family: 'Helvetica', 'Arial', sans-serif;
+    font-size: 56px;
+    font-weight: bold;
+    pointer-events: none;
+    letter-spacing: -0.08em;
+    text-transform: lowercase;
+    line-height: 36px;
+    margin-right:120px;
+    z-index: 10;
+    white-space: nowrap;
+}
+
+/* When the overlay sits on a dark background, switch to light text/icons for legibility */
+.overlay-container.overlay--dark-bg .palette-name-overlay {
+    /* slightly transparent white for a softer look */
+    color: rgba(255, 255, 255, 0.55);
+}
+
+/* Default: overlay sits on a light-ish background -> use dark semi-transparent icons */
+.overlay-container .credit-link img,
+.overlay-container .credit-link svg,
+.overlay-container svg {
+    filter: brightness(0) saturate(100%); /* force dark/black rendering */
+    opacity: 0.70;
+    transition: filter 160ms ease, opacity 160ms ease;
+}
+
+/* When overlay is on a dark background, flip icons to light with transparency */
+.overlay-container.overlay--dark-bg .credit-link img,
+.overlay-container.overlay--dark-bg .credit-link svg,
+.overlay-container.overlay--dark-bg svg {
+    filter: invert(1) brightness(1.05) saturate(100%); /* make icons light */
+    opacity: 0.85;
+}
+
+/* Container for credits and palette name */
+.overlay-container {
+    position: fixed;
+    z-index: 10;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Right align both credits and text */
+    gap: 10px; /* Consistent gap between credits and palette name */
+    transition: opacity 0.15s ease; /* Faster fade transition */
+}
+
+/* Credits links positioned above palette name */
+.credits-links {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    pointer-events: auto; /* Enable clicks on credit links */
+    transition: flex-direction 0.15s ease; /* Smooth transition for layout changes */
+}
+
+.credit-link {
+    opacity: 0.60; /* Match the palette text opacity */
+    transition: opacity 0.2s ease;
+    text-decoration: none;
+}
+
+.credit-link:hover {
+    opacity: 0.90;
+}
+
+.credit-icon {
+    width: 42px;
+    height: 42px;
+    filter: brightness(0) saturate(100%) invert(4%) sepia(6%) saturate(0%) hue-rotate(0deg) brightness(95%) contrast(94%);
+    transition: opacity 0.3s ease;
+}
+
+.control-group h3 {
+    margin-bottom: 8px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0px;
+}
+
+.button-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.control-btn {
+    font-family: inherit;
+    text-transform: uppercase;
+    width: 100%;
+    padding: 10px 16px;
+    background: rgba(200,200,200,0.14); /* neutral mid-grey */
+    border: none;
+    border-radius: 2px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+    margin: 0;
+}
+.control-btn:hover { 
+    background: snow;
+    color:#2a2a2a
+}
+
+/* Screen size determines panel size only */
+@media (max-width: 600px) {
+    .floating-panel {
+        left: 10px !important;
+        right: 10px;
+        width: calc(100vw - 20px) !important;
+        min-width: 300px;
+        max-width: none;
+    }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+    .floating-panel {
+        max-width: 600px;
+    }
+}
+
+@media (min-width: 901px) {
+    .floating-panel {
+        max-width: 95vw; /* Allow wider panels */
+    }
+}
+
+/* Fullscreen preview mode styles */
+body.fullscreen-mode .floating-panel {
+    z-index: 10000 !important;
+}
+
+.canvas-container.fullscreen-preview {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 1 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.canvas-container.fullscreen-preview canvas,
+canvas.fullscreen-preview {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    object-fit: cover !important;
+    z-index: 1 !important;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    20%, 80% { opacity: 1; }
+}
+
+/* Preset Code Styling */
+.preset-code-container {
+    width: 100%;
+}
+
+.preset-code-textarea {
+    width: 100%;
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Segoe UI Mono', 'Courier New', monospace;
+    font-size: 11px;
+    background: rgba(26, 26, 26, 0.443);
+    border: 1px solid #404040;
+    color: #e0e0e0;
+    padding: 12px;
+    border-radius: 4px;
+    resize: vertical;
+    min-height: 200px;
+    line-height: 1.4;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.preset-code-textarea:focus {
+    border-color: #666666;
+}
+
+.preset-code-textarea::placeholder {
+    color: #666666;
+    font-style: italic;
+}
+
+.copy-preset-btn {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s ease, color 0.12s ease, transform 0.08s ease;
+    margin-left: auto;
+}
+
+.copy-preset-btn:hover,
+.copy-preset-btn:focus {
+    background: #ffffff;
+    color: #0a0a0a;
+    outline: none;
+}
+
+.copy-preset-btn:active {
+    transform: none;
+}
+
+.copy-preset-btn .icon {
+    width: 14px;
+    height: 14px;
+}
+
+/* Update h3 styling to flex for icon alignment */
+.control-group h3 {
+    margin-bottom: 8px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Section header for groups with action buttons */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.section-header h3 {
+    margin-bottom: 0;
+    flex: 1;
+}
+
+/* Section action buttons */
+.section-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s ease, color 0.12s ease;
+    margin-left: 8px;
+}
+
+.section-btn:hover,
+.section-btn:focus {
+    background: #ffffff;
+    color: #0a0a0a;
+    outline: none;
+}
+
+.section-btn:active {
+    transform: none;
+    background: #ffffff;
+    color: #0a0a0a;
+}
+
+.section-btn .icon {
+    width: 12px;
+    height: 12px;
+    display: block;
+}
