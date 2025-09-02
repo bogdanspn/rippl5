@@ -2,6 +2,14 @@
 // This file contains all the predefined presets for the rippl5 visual generator
 
 const presets = {
+    "steel-kelp": {
+        color1: '#166938', color2: '#b72078', color3: '#72e3da', color4: '#f6b3b9',
+        color5: '#674558', color6: '#9582a9', color7: '#b4cbca', color8: '#868e79',
+        waveCount: 15, waveAmplitude: 2.8, waveZoom: 4, waveFrequency: 1.3,
+        waveTwirl: 0.178, twirlSources: 1, twirlLocation: 2, waveSpeed: 2.3,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 2.6, amplitudeVariation: 0, directionDrift: 1.2,
+        blendMode: 0, pixelationSize: 3.0
+    },
     sunset: {
         color1: '#FF6B6B', color2: '#FF8E53', color3: '#FF8A80', color4: '#FFAB40',
         waveCount: 6, waveAmplitude: 1.2, waveZoom: 3.8, waveFrequency: 1.0
