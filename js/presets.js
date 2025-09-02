@@ -2,6 +2,14 @@
 // This file contains all the predefined presets for the rippl5 visual generator
 
 const presets = {
+    "galaxy-whirl": {
+        color1: '#120316', color2: '#65062a', color3: '#7c2f0b', color4: '#ac1684',
+        color5: '#3c0520', color6: '#711b1b', color7: '#942348', color8: '#5f0d4d',
+        waveCount: 16, waveAmplitude: 1.5, waveZoom: 10.9, waveFrequency: 2.6,
+        waveTwirl: 0.112, twirlSources: 6, twirlLocation: 2, waveSpeed: 2.8,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 2.5, amplitudeVariation: 0, directionDrift: 0.7,
+        blendMode: 0, watercolor: 0.28
+    },
     "steel-kelp": {
         color1: '#166938', color2: '#b72078', color3: '#72e3da', color4: '#f6b3b9',
         color5: '#674558', color6: '#9582a9', color7: '#b4cbca', color8: '#868e79',
