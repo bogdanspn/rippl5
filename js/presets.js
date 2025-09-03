@@ -2,6 +2,14 @@
 // This file contains all the predefined presets for the rippl5 visual generator
 
 const presets = {
+    "honey-vortex": {
+        color1: '#26216f', color2: '#acb628', color3: '#a86fd3', color4: '#c2eca2',
+        color5: '#696c4c', color6: '#aa937e', color7: '#b5aebb', color8: '#748789',
+        waveCount: 4, waveAmplitude: 3.05, waveZoom: 3.9, waveFrequency: 2.7,
+        waveTwirl: 0.118, twirlSources: 2, twirlLocation: 1, waveSpeed: 2.5,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 1.9, amplitudeVariation: 0.8, directionDrift: 0.5,
+        blendMode: 0, filmEffect: 9, glassStripesFrequency: 20, glassStripesIntensity: 0, glassStripesDirection: 0, glassStripesDistortion: 0.9, trailBlur: 0.80
+    },
     "burgundy-methylene": {
         color1: '#891044', color2: '#c32921', color3: '#72a8eb', color4: '#438fa8',
         color5: '#6a5554', color6: '#9b6986', color7: '#b1b9c3', color8: '#62b5df',
