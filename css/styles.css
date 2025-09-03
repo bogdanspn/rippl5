@@ -710,6 +710,18 @@ canvas {
     color:#2a2a2a
 }
 
+.control-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.control-btn .icon {
+    width: 14px;
+    height: 14px;
+}
+
 /* Screen size determines panel size only */
 @media (max-width: 600px) {
     .floating-panel {
@@ -892,4 +904,111 @@ canvas.fullscreen-preview {
     width: 12px;
     height: 12px;
     display: block;
+}
+
+/* Video Recording Styles */
+.video-recording-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.video-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.video-btn {
+    font-family: inherit;
+    text-transform: uppercase;
+    width: 100%;
+    padding: 10px 16px;
+    background: rgba(200,200,200,0.14);
+    border: none;
+    border-radius: 2px;
+    color: #ffffff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.video-btn:hover {
+    background: snow;
+    color: #2a2a2a;
+}
+
+.video-btn .icon {
+    width: 14px;
+    height: 14px;
+}
+
+.video-btn.recording {
+    background: rgba(220, 38, 38, 0.8) !important;
+    color: #ffffff !important;
+    animation: recordingPulse 1.5s ease-in-out infinite;
+}
+
+.video-btn.recording:hover {
+    background: rgba(220, 38, 38, 0.9) !important;
+    color: #ffffff !important;
+}
+
+.video-record-btn.recording {
+    background: rgba(220, 38, 38, 0.8) !important;
+    border-color: rgba(220, 38, 38, 1) !important;
+    animation: recordingPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes recordingPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.recording-status {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.recording-indicator {
+    width: 8px;
+    height: 8px;
+    background: #dc2626;
+    border-radius: 50%;
+    animation: recordingBlink 1s ease-in-out infinite;
+}
+
+@keyframes recordingBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.recording-time {
+    color: #dc2626;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+}
+
+/* Export group specific styles */
+.export-group .button-section {
+    margin-bottom: 15px;
+}
+
+.export-group h3 {
+    margin-bottom: 15px;
 }

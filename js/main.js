@@ -660,6 +660,58 @@ const fragmentShaderSource = `
 // Presets based on color theory principles
 // Presets are now loaded from presets.js
 
+// Function to populate preset options from presets.js
+function populatePresetOptions() {
+    const presetSelect = document.getElementById('presetSelect');
+    if (!presetSelect) {
+        console.error('Preset select element not found');
+        return;
+    }
+    
+    if (typeof presets === 'undefined') {
+        console.error('Presets object not found - make sure presets.js is loaded');
+        return;
+    }
+    
+    // Special display name mappings for better readability
+    const specialNames = {
+        'auroris-borealis': 'Aurora Borealis',
+        'film-noir': 'Film Noir',
+        'lavender-swirly-swirl': 'Lavender Swirl',
+        'bluecurl-shimmer': 'Blue Curl Shimmer',
+        'steel-kelp': 'Steel Kelp',
+        'galaxy-whirl': 'Galaxy Whirl'
+    };
+    
+    // Helper function to convert preset key to display name
+    function formatPresetName(key) {
+        // Check if we have a special name mapping
+        if (specialNames[key]) {
+            return specialNames[key];
+        }
+        
+        // Default formatting: split on hyphens and title case each word
+        return key
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    }
+    
+    // Get all preset keys and sort them alphabetically by display name
+    const presetEntries = Object.keys(presets).map(key => ({
+        key: key,
+        displayName: formatPresetName(key)
+    })).sort((a, b) => a.displayName.localeCompare(b.displayName));
+    
+    // Add options to the select element
+    presetEntries.forEach(preset => {
+        const option = document.createElement('option');
+        option.value = preset.key;
+        option.textContent = preset.displayName;
+        presetSelect.appendChild(option);
+    });
+}
+
 function init() {
     canvas = document.getElementById('canvas');
     gl = canvas.getContext('webgl');
@@ -672,6 +724,10 @@ function init() {
     setupShaders();
     setupGeometry();
     updateResolution();
+    
+    // Populate preset options from presets.js
+    populatePresetOptions();
+    
     // Start with a randomized palette and sensible parameters on page load
     randomize();
     animate();
@@ -910,6 +966,64 @@ function createShader(type, source) {
     }
     
     return shader;
+}
+
+function createProgram(gl, vertexShader, fragmentShader) {
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        console.error('Program linking error:', gl.getProgramInfoLog(program));
+        gl.deleteProgram(program);
+        return null;
+    }
+    
+    return program;
+}
+
+function getUniformLocations(gl, program) {
+    return {
+        resolution: gl.getUniformLocation(program, 'resolution'),
+        time: gl.getUniformLocation(program, 'time'),
+        waveSpeed: gl.getUniformLocation(program, 'waveSpeed'),
+        blendMode: gl.getUniformLocation(program, 'blendMode'),
+        filmEffect: gl.getUniformLocation(program, 'filmEffect'),
+        filmNoiseIntensity: gl.getUniformLocation(program, 'filmNoiseIntensity'),
+        bloomIntensity: gl.getUniformLocation(program, 'bloomIntensity'),
+        caAmount: gl.getUniformLocation(program, 'caAmount'),
+        lensDistortion: gl.getUniformLocation(program, 'lensDistortion'),
+        pixelationSize: gl.getUniformLocation(program, 'pixelationSize'),
+        trailBlur: gl.getUniformLocation(program, 'trailBlur'),
+        watercolor: gl.getUniformLocation(program, 'watercolor'),
+        toneMappingLUT: gl.getUniformLocation(program, 'toneMappingLUT'),
+        waveCount: gl.getUniformLocation(program, 'waveCount'),
+        waveAmplitude: gl.getUniformLocation(program, 'waveAmplitude'),
+        waveFrequency: gl.getUniformLocation(program, 'waveFrequency'),
+        waveZoom: gl.getUniformLocation(program, 'waveZoom'),
+        waveTwirl: gl.getUniformLocation(program, 'waveTwirl'),
+        twirlSources: gl.getUniformLocation(program, 'twirlSources'),
+        twirlLocation: gl.getUniformLocation(program, 'twirlLocation'),
+        twirlSeedX: gl.getUniformLocation(program, 'twirlSeedX'),
+        twirlSeedY: gl.getUniformLocation(program, 'twirlSeedY'),
+        turbulenceIntensity: gl.getUniformLocation(program, 'turbulenceIntensity'),
+        noiseDisplacement: gl.getUniformLocation(program, 'noiseDisplacement'),
+        phaseRandomness: gl.getUniformLocation(program, 'phaseRandomness'),
+        amplitudeVariation: gl.getUniformLocation(program, 'amplitudeVariation'),
+        directionDrift: gl.getUniformLocation(program, 'directionDrift'),
+        color1: gl.getUniformLocation(program, 'color1'),
+        color2: gl.getUniformLocation(program, 'color2'),
+        color3: gl.getUniformLocation(program, 'color3'),
+        color4: gl.getUniformLocation(program, 'color4'),
+        color5: gl.getUniformLocation(program, 'color5'),
+        color6: gl.getUniformLocation(program, 'color6'),
+        color7: gl.getUniformLocation(program, 'color7'),
+        color8: gl.getUniformLocation(program, 'color8'),
+        brightness: gl.getUniformLocation(program, 'brightness'),
+        contrast: gl.getUniformLocation(program, 'contrast'),
+        saturation: gl.getUniformLocation(program, 'saturation')
+    };
 }
 
 function setupGeometry() {
@@ -2093,19 +2207,8 @@ function randomize() {
     
     document.getElementById('blendMode').value = blendMode;
 
-    // Randomize filmic effects - pick one effect and set appropriate intensity
-    let selectedEffect = Math.floor(Math.random() * 9); // 0-8: All effects excluding God rays
-    
-    // Exception: Avoid bloom with screen blend mode and light colors
-    if (selectedEffect === 4 && blendMode === 2 && hasLightColors()) {
-        // If bloom + screen + light colors, choose a different effect
-        const alternativeEffects = [0, 1, 2, 3, 5, 6, 7, 8]; // Exclude bloom (4)
-        selectedEffect = alternativeEffects[Math.floor(Math.random() * alternativeEffects.length)];
-    }
-    
-    document.getElementById('filmEffect').value = selectedEffect;
-
-    // Reset all effect intensities first
+    // Reset filmic effects to default (no effects) during randomization
+    document.getElementById('filmEffect').value = 0; // No effect
     document.getElementById('filmNoiseIntensity').value = 0;
     document.getElementById('bloomIntensity').value = 0;
     document.getElementById('caAmount').value = 0;
@@ -2114,26 +2217,6 @@ function randomize() {
     document.getElementById('trailBlur').value = 0;
     document.getElementById('watercolor').value = 0;
     document.getElementById('toneMappingLUT').value = 0;
-
-    // Set intensities based on selected effect
-    if (selectedEffect === 1) { // Film Noise
-        document.getElementById('filmNoiseIntensity').value = (0.05 + Math.random() * 0.15).toFixed(3); // 0.05 to 0.2
-    } else if (selectedEffect === 4) { // Bloom
-        document.getElementById('bloomIntensity').value = (0.2 + Math.random() * 0.6).toFixed(2); // 0.2 to 0.8
-    } else if (selectedEffect === 3) { // Chromatic Aberration
-        document.getElementById('caAmount').value = (0.002 + Math.random() * 0.015).toFixed(4); // 0.002 to 0.017
-    } else if (selectedEffect === 5) { // Lens Distortion
-        // Allow stronger lens distortion during randomization (-1.8 to 1.8)
-        document.getElementById('lensDistortion').value = ((Math.random() - 0.5) * 3.6).toFixed(2); // -1.8 to 1.8
-    } else if (selectedEffect === 6) { // Pixelation
-        document.getElementById('pixelationSize').value = (2 + Math.random() * 15).toFixed(1); // 2.0 to 17.0
-    } else if (selectedEffect === 7) { // Trail/Motion Blur
-        document.getElementById('trailBlur').value = (0.2 + Math.random() * 0.6).toFixed(2); // 0.2 to 0.8
-    } else if (selectedEffect === 8) { // Watercolor Bleeding
-        document.getElementById('watercolor').value = (0.2 + Math.random() * 0.6).toFixed(2); // 0.2 to 0.8
-    } else if (selectedEffect === 2) { // Filmic Tone Mapping
-        document.getElementById('toneMappingLUT').value = Math.floor(Math.random() * 8); // 0-7 (different LUTs)
-    }
 
     // Generate and display palette name
     const waveParams = {
@@ -2206,6 +2289,366 @@ function exportImage() {
     // Resume animation if it was running
     if (wasAnimating) {
         animate();
+    }
+}
+
+// Video recording functionality
+let mediaRecorder;
+let recordedChunks = [];
+let isRecording = false;
+let recordingStartTime;
+let recordingInterval;
+
+async function toggleVideoRecording() {
+    if (!isRecording) {
+        await startVideoRecording();
+    } else {
+        stopVideoRecording();
+    }
+}
+
+async function startVideoRecording() {
+    try {
+        // Get recording parameters
+        const duration = parseInt(document.getElementById('videoDuration').value);
+        const quality = document.getElementById('videoQuality').value;
+        const format = document.getElementById('videoFormat').value;
+        
+        // Parse quality settings
+        const [width, height] = quality.split('x').map(Number);
+        
+        // Create a high-resolution canvas for recording
+        const recordingCanvas = document.createElement('canvas');
+        recordingCanvas.width = width;
+        recordingCanvas.height = height;
+        
+        // Get WebGL context for recording canvas
+        const recordingGL = recordingCanvas.getContext('webgl2') || recordingCanvas.getContext('webgl');
+        if (!recordingGL) {
+            throw new Error('WebGL not supported for recording');
+        }
+        
+        // Set up recording canvas with same shader program
+        setupRecordingCanvas(recordingGL, recordingCanvas);
+        
+        // Get media stream from recording canvas with higher frame rate
+        const stream = recordingCanvas.captureStream(60); // 60 FPS
+        
+        // Configure MediaRecorder with better codec options
+        let mimeType;
+        let options;
+        
+        if (format === 'webm') {
+            // Prefer VP9 for WebM, fallback to VP8
+            if (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')) {
+                mimeType = 'video/webm;codecs=vp9';
+            } else if (MediaRecorder.isTypeSupported('video/webm;codecs=vp8')) {
+                mimeType = 'video/webm;codecs=vp8';
+            } else {
+                mimeType = 'video/webm';
+            }
+            options = {
+                mimeType: mimeType,
+                videoBitsPerSecond: width >= 3840 ? 50000000 : width >= 2560 ? 20000000 : 8000000
+            };
+        } else {
+            // For MP4, try different codec combinations
+            if (MediaRecorder.isTypeSupported('video/mp4;codecs=h264')) {
+                mimeType = 'video/mp4;codecs=h264';
+            } else if (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1.42E01E')) {
+                mimeType = 'video/mp4;codecs=avc1.42E01E';
+            } else if (MediaRecorder.isTypeSupported('video/mp4')) {
+                mimeType = 'video/mp4';
+            } else {
+                // Fallback to WebM if MP4 not supported
+                mimeType = 'video/webm';
+                console.warn('MP4 not supported, falling back to WebM');
+            }
+            options = {
+                mimeType: mimeType,
+                videoBitsPerSecond: width >= 3840 ? 40000000 : width >= 2560 ? 16000000 : 6000000
+            };
+        }
+        
+        console.log('Recording with:', mimeType, 'at', width + 'x' + height);
+        
+        mediaRecorder = new MediaRecorder(stream, options);
+        recordedChunks = [];
+        
+        mediaRecorder.ondataavailable = event => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+                console.log('Data chunk recorded:', event.data.size, 'bytes');
+            }
+        };
+        
+        mediaRecorder.onstop = () => {
+            console.log('Recording stopped, total chunks:', recordedChunks.length);
+            downloadRecording(format, mimeType);
+            cleanupRecording();
+        };
+        
+        mediaRecorder.onerror = (event) => {
+            console.error('MediaRecorder error:', event.error);
+            alert('Recording error: ' + event.error.message);
+            cleanupRecording();
+        };
+        
+        // Start recording with smaller time slices for better MP4 compatibility
+        mediaRecorder.start(100); // Request data every 100ms
+        isRecording = true;
+        recordingStartTime = Date.now();
+        
+        // Update UI
+        updateRecordingUI(true);
+        
+        // Start recording timer
+        recordingInterval = setInterval(() => {
+            updateRecordingTimer();
+        }, 100);
+        
+        // Start high-quality rendering loop with consistent timing
+        startRecordingRenderLoop(recordingGL, recordingCanvas);
+        
+        // Auto-stop after duration
+        setTimeout(() => {
+            if (isRecording) {
+                stopVideoRecording();
+            }
+        }, duration * 1000);
+        
+    } catch (error) {
+        console.error('Error starting video recording:', error);
+        alert('Failed to start video recording: ' + error.message);
+    }
+}
+
+function stopVideoRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        
+        // Clear recording timer
+        if (recordingInterval) {
+            clearInterval(recordingInterval);
+            recordingInterval = null;
+        }
+        
+        // Update UI
+        updateRecordingUI(false);
+    }
+}
+
+function setupRecordingCanvas(recordingGL, recordingCanvas) {
+    // Set up WebGL context for recording (same as main canvas)
+    recordingGL.viewport(0, 0, recordingCanvas.width, recordingCanvas.height);
+    
+    // Create and compile shaders (reuse existing shader sources)
+    const vertexShader = createRecordingShader(recordingGL, recordingGL.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = createRecordingShader(recordingGL, recordingGL.FRAGMENT_SHADER, fragmentShaderSource);
+    
+    // Create program
+    const recordingProgram = createProgram(recordingGL, vertexShader, fragmentShader);
+    recordingGL.useProgram(recordingProgram);
+    
+    // Set up geometry (same as main canvas)
+    const positionBuffer = recordingGL.createBuffer();
+    recordingGL.bindBuffer(recordingGL.ARRAY_BUFFER, positionBuffer);
+    recordingGL.bufferData(recordingGL.ARRAY_BUFFER, new Float32Array([
+        -1, -1, 1, -1, -1, 1, 1, 1
+    ]), recordingGL.STATIC_DRAW);
+    
+    const positionLocation = recordingGL.getAttribLocation(recordingProgram, 'position');
+    recordingGL.enableVertexAttribArray(positionLocation);
+    recordingGL.vertexAttribPointer(positionLocation, 2, recordingGL.FLOAT, false, 0, 0);
+    
+    // Store for rendering
+    recordingCanvas.gl = recordingGL;
+    recordingCanvas.program = recordingProgram;
+    recordingCanvas.uniforms = getUniformLocations(recordingGL, recordingProgram);
+}
+
+function createRecordingShader(recordingGL, type, source) {
+    const shader = recordingGL.createShader(type);
+    recordingGL.shaderSource(shader, source);
+    recordingGL.compileShader(shader);
+    
+    if (!recordingGL.getShaderParameter(shader, recordingGL.COMPILE_STATUS)) {
+        console.error('Recording shader compilation error:', recordingGL.getShaderInfoLog(shader));
+        recordingGL.deleteShader(shader);
+        return null;
+    }
+    
+    return shader;
+}
+
+function startRecordingRenderLoop(recordingGL, recordingCanvas) {
+    let lastFrameTime = 0;
+    const targetFrameTime = 1000 / 60; // 60 FPS = 16.67ms per frame
+    
+    function renderFrame(currentTime) {
+        if (!isRecording) return;
+        
+        // Throttle to maintain consistent 60 FPS
+        if (currentTime - lastFrameTime >= targetFrameTime) {
+            // Update resolution uniform for recording canvas
+            recordingGL.uniform2f(recordingCanvas.uniforms.resolution, recordingCanvas.width, recordingCanvas.height);
+            
+            // Copy all current uniform values to recording canvas
+            copyUniformsToRecordingCanvas(recordingGL, recordingCanvas.uniforms);
+            
+            // Render frame
+            recordingGL.clearColor(0, 0, 0, 1);
+            recordingGL.clear(recordingGL.COLOR_BUFFER_BIT);
+            recordingGL.drawArrays(recordingGL.TRIANGLE_STRIP, 0, 4);
+            
+            // Force the frame to be available for capture
+            recordingGL.flush();
+            recordingGL.finish();
+            
+            lastFrameTime = currentTime;
+        }
+        
+        // Continue loop
+        if (isRecording) {
+            requestAnimationFrame(renderFrame);
+        }
+    }
+    
+    // Start the render loop
+    requestAnimationFrame(renderFrame);
+}
+
+function copyUniformsToRecordingCanvas(recordingGL, recordingUniforms) {
+    // Copy all uniform values from main canvas to recording canvas
+    const waveSpeed = parseFloat(document.getElementById('waveSpeed').value);
+    recordingGL.uniform1f(recordingUniforms.time, performance.now() * 0.001 * waveSpeed);
+    recordingGL.uniform1f(recordingUniforms.waveSpeed, waveSpeed);
+    
+    // Wave parameters
+    recordingGL.uniform1i(recordingUniforms.waveCount, parseInt(document.getElementById('waveCount').value));
+    recordingGL.uniform1f(recordingUniforms.waveAmplitude, parseFloat(document.getElementById('waveAmplitude').value));
+    recordingGL.uniform1f(recordingUniforms.waveFrequency, parseFloat(document.getElementById('waveFrequency').value));
+    recordingGL.uniform1f(recordingUniforms.waveZoom, parseFloat(document.getElementById('waveZoom').value));
+    recordingGL.uniform1f(recordingUniforms.waveTwirl, parseFloat(document.getElementById('waveTwirl').value));
+    recordingGL.uniform1i(recordingUniforms.twirlSources, parseInt(document.getElementById('twirlSources').value));
+    recordingGL.uniform1i(recordingUniforms.twirlLocation, parseInt(document.getElementById('twirlLocation').value));
+    recordingGL.uniform1f(recordingUniforms.twirlSeedX, twirlSeedX);
+    recordingGL.uniform1f(recordingUniforms.twirlSeedY, twirlSeedY);
+    
+    // Special effects
+    recordingGL.uniform1f(recordingUniforms.turbulenceIntensity, parseFloat(document.getElementById('turbulence').value));
+    recordingGL.uniform1f(recordingUniforms.noiseDisplacement, parseFloat(document.getElementById('noiseDisplacement').value));
+    recordingGL.uniform1f(recordingUniforms.phaseRandomness, parseFloat(document.getElementById('phaseRandomness').value));
+    recordingGL.uniform1f(recordingUniforms.amplitudeVariation, parseFloat(document.getElementById('amplitudeVariation').value));
+    recordingGL.uniform1f(recordingUniforms.directionDrift, parseFloat(document.getElementById('directionDrift').value));
+    
+    // Blend mode and film effects
+    recordingGL.uniform1i(recordingUniforms.blendMode, parseInt(document.getElementById('blendMode').value));
+    recordingGL.uniform1i(recordingUniforms.filmEffect, parseInt(document.getElementById('filmEffect').value));
+    recordingGL.uniform1f(recordingUniforms.filmNoiseIntensity, parseFloat(document.getElementById('filmNoiseIntensity').value));
+    recordingGL.uniform1f(recordingUniforms.bloomIntensity, parseFloat(document.getElementById('bloomIntensity').value));
+    recordingGL.uniform1f(recordingUniforms.caAmount, parseFloat(document.getElementById('caAmount').value));
+    recordingGL.uniform1f(recordingUniforms.lensDistortion, parseFloat(document.getElementById('lensDistortion').value));
+    recordingGL.uniform1f(recordingUniforms.pixelationSize, parseFloat(document.getElementById('pixelationSize').value));
+    recordingGL.uniform1f(recordingUniforms.trailBlur, parseFloat(document.getElementById('trailBlur').value));
+    recordingGL.uniform1f(recordingUniforms.watercolor, parseFloat(document.getElementById('watercolor').value));
+    recordingGL.uniform1i(recordingUniforms.toneMappingLUT, parseInt(document.getElementById('toneMappingLUT').value));
+    
+    // Colors
+    recordingGL.uniform3fv(recordingUniforms.color1, hexToRgb(document.getElementById('color1').value));
+    recordingGL.uniform3fv(recordingUniforms.color2, hexToRgb(document.getElementById('color2').value));
+    recordingGL.uniform3fv(recordingUniforms.color3, hexToRgb(document.getElementById('color3').value));
+    recordingGL.uniform3fv(recordingUniforms.color4, hexToRgb(document.getElementById('color4').value));
+    recordingGL.uniform3fv(recordingUniforms.color5, hexToRgb(document.getElementById('color5').value));
+    recordingGL.uniform3fv(recordingUniforms.color6, hexToRgb(document.getElementById('color6').value));
+    recordingGL.uniform3fv(recordingUniforms.color7, hexToRgb(document.getElementById('color7').value));
+    recordingGL.uniform3fv(recordingUniforms.color8, hexToRgb(document.getElementById('color8').value));
+    
+    // Basic adjustments
+    recordingGL.uniform1f(recordingUniforms.brightness, parseFloat(document.getElementById('brightness').value));
+    recordingGL.uniform1f(recordingUniforms.contrast, parseFloat(document.getElementById('contrast').value));
+    recordingGL.uniform1f(recordingUniforms.saturation, parseFloat(document.getElementById('saturation').value));
+}
+
+function updateRecordingUI(recording) {
+    const recordBtn = document.getElementById('videoRecordBtn');
+    const recordBtnPanel = document.getElementById('btnVideoRecord');
+    const recordingStatus = document.getElementById('recordingStatus');
+    
+    if (recording) {
+        recordBtn.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#icon-stop"></use></svg> Stop Recording';
+        recordBtn.classList.add('recording');
+        recordBtnPanel.classList.add('recording');
+        recordingStatus.style.display = 'flex';
+    } else {
+        recordBtn.innerHTML = '<svg class="icon" aria-hidden="true"><use href="#icon-video"></use></svg> Start Recording';
+        recordBtn.classList.remove('recording');
+        recordBtnPanel.classList.remove('recording');
+        recordingStatus.style.display = 'none';
+    }
+}
+
+function updateRecordingTimer() {
+    if (!recordingStartTime) return;
+    
+    const elapsed = (Date.now() - recordingStartTime) / 1000;
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = Math.floor(elapsed % 60);
+    
+    const timeDisplay = document.querySelector('.recording-time');
+    if (timeDisplay) {
+        timeDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+}
+
+function downloadRecording(format, actualMimeType) {
+    if (recordedChunks.length === 0) return;
+    
+    // Determine the actual format from MIME type if needed
+    let fileExtension = format;
+    if (actualMimeType) {
+        if (actualMimeType.includes('webm')) {
+            fileExtension = 'webm';
+        } else if (actualMimeType.includes('mp4')) {
+            fileExtension = 'mp4';
+        }
+    }
+    
+    const blob = new Blob(recordedChunks, {
+        type: actualMimeType || (format === 'webm' ? 'video/webm' : 'video/mp4')
+    });
+    
+    // Get the current palette name for filename
+    const paletteNameElement = document.getElementById('paletteNameOverlay');
+    const paletteName = paletteNameElement ? paletteNameElement.textContent.toLowerCase().replace(/\s+/g, '-') : 'untitled';
+    
+    const randomNum = Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+    const quality = document.getElementById('videoQuality').value;
+    
+    const filename = `rippl5-${paletteName}-${quality}-${randomNum}.${fileExtension}`;
+    
+    console.log('Downloading:', filename, 'Size:', blob.size, 'bytes', 'Type:', blob.type);
+    
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // Clean up
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function cleanupRecording() {
+    recordedChunks = [];
+    recordingStartTime = null;
+    
+    if (recordingInterval) {
+        clearInterval(recordingInterval);
+        recordingInterval = null;
     }
 }
 

@@ -2,22 +2,6 @@
 // This file contains all the predefined presets for the rippl5 visual generator
 
 const presets = {
-    "galaxy-whirl": {
-        color1: '#120316', color2: '#65062a', color3: '#7c2f0b', color4: '#ac1684',
-        color5: '#3c0520', color6: '#711b1b', color7: '#942348', color8: '#5f0d4d',
-        waveCount: 16, waveAmplitude: 1.5, waveZoom: 10.9, waveFrequency: 2.6,
-        waveTwirl: 0.112, twirlSources: 6, twirlLocation: 2, waveSpeed: 2.8,
-        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 2.5, amplitudeVariation: 0, directionDrift: 0.7,
-        blendMode: 0, watercolor: 0.28
-    },
-    "steel-kelp": {
-        color1: '#166938', color2: '#b72078', color3: '#72e3da', color4: '#f6b3b9',
-        color5: '#674558', color6: '#9582a9', color7: '#b4cbca', color8: '#868e79',
-        waveCount: 15, waveAmplitude: 2.8, waveZoom: 4, waveFrequency: 1.3,
-        waveTwirl: 0.178, twirlSources: 1, twirlLocation: 2, waveSpeed: 2.3,
-        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 2.6, amplitudeVariation: 0, directionDrift: 1.2,
-        blendMode: 0, pixelationSize: 3.0
-    },
     sunset: {
         color1: '#FF6B6B', color2: '#FF8E53', color3: '#FF8A80', color4: '#FFAB40',
         waveCount: 6, waveAmplitude: 1.2, waveZoom: 3.8, waveFrequency: 1.0
@@ -346,5 +330,32 @@ const presets = {
         turbulence: 0, noiseDisplacement: 0, phaseRandomness: 0.2, amplitudeVariation: 0, directionDrift: 1.6,
         blendMode: 0, filmEffect: 5, lensDistortion: -1.46,
         brightness: -0.02, contrast: 1.5, saturation: 1.5
+    },
+    "edge-bright-dye": {
+        color1: '#202d40', color2: '#0e80cc', color3: '#ebdd5e', color4: '#8b95f4',
+        color5: '#396f93', color6: '#7daf95', color7: '#bbb9a9', color8: '#77627f',
+        waveCount: 14, waveAmplitude: 1.35, waveZoom: 5.5, waveFrequency: 1.6,
+        waveTwirl: 0.066, twirlSources: 6, twirlLocation: 0, waveSpeed: 0.9,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 1.2, amplitudeVariation: 1.6, directionDrift: 0.6,
+        blendMode: 1,
+        brightness: 0, contrast: 1.7, saturation: 2.47
+    },
+    "glow-shimmer": {
+        color1: '#ff0080', color2: '#00ffff', color3: '#ff6600', color4: '#8000ff',
+        color5: '#ff40bf', color6: '#80cc80', color7: '#ff9933', color8: '#bf40bf',
+        waveCount: 8, waveAmplitude: 2.2, waveZoom: 6.5, waveFrequency: 1.8,
+        waveTwirl: 0.120, twirlSources: 4, twirlLocation: 1, waveSpeed: 2.5,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 0, amplitudeVariation: 0.3, directionDrift: 0,
+        blendMode: 3, filmEffect: 4, bloomIntensity: 0.6,
+        brightness: -0.42, contrast: 1.5, saturation: 1.86
+    },
+    "hemp-nebula": {
+        color1: '#280923', color2: '#084f13', color3: '#6d1a37', color4: '#239c71',
+        color5: '#182c1b', color6: '#3b3525', color7: '#485b54', color8: '#26534a',
+        waveCount: 13, waveAmplitude: 1.3, waveZoom: 8.5, waveFrequency: 0.8,
+        waveTwirl: 0.112, twirlSources: 6, twirlLocation: 1, waveSpeed: 1.3,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 2.5, amplitudeVariation: 0, directionDrift: 1,
+        blendMode: 0, filmEffect: 2, toneMappingLUT: 4,
+        brightness: 0.06, contrast: 3, saturation: 3
     }
 };

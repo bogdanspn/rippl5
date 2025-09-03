@@ -1,4 +1,4 @@
-# rippl5: Gradient Wallpaper Generator
+# Rippl5: Gradient Wallpaper Generator
 
 Rippl5 is a modern web application designed to generate stunning gradient wallpapers. With an intuitive interface and powerful customization options, it allows users to create unique visuals effortlessly.
 
@@ -27,10 +27,13 @@ Rippl5 is a modern web application designed to generate stunning gradient wallpa
    # Then open http://localhost:8000 in your browser
    ```
 
-## Notes
+## Notes & Next Steps
+
+- Modularize JavaScript further by splitting presets, shaders, and UI bindings into separate modules.
+- Add a build step (e.g., esbuild or parcel) for ES module support and minification.
+- Optionally extract shader sources to `.glsl` files for better management.
 
 Rippl5 is built from scratch to provide a seamless and enjoyable experience for creating gradient wallpapers. 
 Feel free to contribute or suggest improvements!
-
 
 
