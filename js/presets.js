@@ -2,6 +2,25 @@
 // This file contains all the predefined presets for the rippl5 visual generator
 
 const presets = {
+    "burgundy-methylene": {
+        color1: '#891044', color2: '#c32921', color3: '#72a8eb', color4: '#438fa8',
+        color5: '#6a5554', color6: '#9b6986', color7: '#b1b9c3', color8: '#62b5df',
+        waveCount: 16, waveAmplitude: 2.45, waveZoom: 6.9, waveFrequency: 2.6,
+        waveTwirl: 0.150, twirlSources: 4, twirlLocation: 2, waveSpeed: 2.8,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 1, amplitudeVariation: 2.1, directionDrift: 1.4,
+        blendMode: 0, filmEffect: 9, glassStripesFrequency: 30, glassStripesIntensity: 0.1,
+        brightness: -0.16, contrast: 2.13, saturation: 2.16
+    },
+    "alien-plankton": {
+        color1: '#40700d', color2: '#7823d3', color3: '#5ee85c', color4: '#f3b3f4',
+        color5: '#5c4a70', color6: '#6b8698', color7: '#a9cea8', color8: '#9a9281',
+        waveCount: 16, waveAmplitude: 0.55, waveZoom: 11.4, waveFrequency: 2,
+        waveTwirl: 0.076, twirlSources: 2, twirlLocation: 2, waveSpeed: 2.8,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 2, amplitudeVariation: 0, directionDrift: 0.1,
+        glassStripesFrequency: 50, glassStripesIntensity: 0,
+        blendMode: 0, filmEffect: 9,
+        brightness: -0.1, contrast: 1.23, saturation: 2.52
+    },
     "chaotic-ore": {
         color1: '#180a06', color2: '#58410b', color3: '#7a851a', color4: '#8c5219',
         color5: '#382609', color6: '#696313', color7: '#836c1a', color8: '#522e10',

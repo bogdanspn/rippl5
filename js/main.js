@@ -50,6 +50,8 @@ const fragmentShaderSource = `
     uniform float watercolor;
     uniform float glassStripesIntensity;
     uniform float glassStripesFrequency;
+    uniform int glassStripesDirection;
+    uniform float glassStripesDistortion;
     uniform int toneMappingLUT; // LUT selection for tone mapping
     uniform int waveCount;
     uniform float waveAmplitude;
@@ -367,23 +369,35 @@ const fragmentShaderSource = `
         // Optional soft banding effect
         if (glassStripesIntensity > 0.0) {
             float numSlices = glassStripesFrequency * 0.8;
-            float sliceProgress = fract(uv.x * numSlices);
+            float sliceProgress;
             
-            // Create very soft sinusoidal shading with smooth transitions
-            float bandPattern = sin(sliceProgress * 6.28318530718);
+            if (glassStripesDirection == 0) {
+                // Vertical flutes - bands run vertically
+                sliceProgress = fract(uv.x * numSlices);
+            } else {
+                // Horizontal flutes - bands run horizontally
+                sliceProgress = fract(uv.y * numSlices);
+            }
             
-            // Apply multiple smoothing functions for very soft transitions
-            bandPattern = smoothstep(-0.8, 0.8, bandPattern); // First smoothing
-            bandPattern = smoothstep(0.2, 0.8, bandPattern); // Second smoothing for even softer edges
+            // Create smooth gradient-like transitions instead of sine waves
+            float distanceFromCenter = abs(sliceProgress - 0.5) * 2.0; // 0 at center, 1 at edges
             
-            // Create very subtle brightness variation
-            float bandShading = (bandPattern - 0.5) * 0.08 * glassStripesIntensity; // Much softer effect
+            // Create smooth gradient falloff for thick bands
+            float bandPattern = 1.0 - distanceFromCenter; // 1 at center, 0 at edges
+            
+            // Apply multiple smoothing layers for ultra-smooth transitions
+            bandPattern = smoothstep(0.0, 1.0, bandPattern); // First smoothing
+            bandPattern = smoothstep(0.1, 0.9, bandPattern); // Second smoothing for softer edges
+            bandPattern = smoothstep(0.2, 0.8, bandPattern); // Third smoothing for gradient-like softness
+            
+            // Create very subtle brightness variation with smooth falloff
+            float bandShading = (bandPattern - 0.5) * 0.06 * glassStripesIntensity; // Even gentler
             frostedColor *= (1.0 + bandShading);
             
-            // Add even softer edge highlights for 3D feel
-            float edgeHighlight = abs(sin(sliceProgress * 6.28318530718 + 1.57)) * 0.02 * glassStripesIntensity;
-            edgeHighlight = smoothstep(0.7, 1.0, edgeHighlight); // Smooth the highlight
-            frostedColor += vec3(edgeHighlight * 0.3);
+            // Add soft gradient highlights that follow the same smooth pattern
+            float gradientHighlight = bandPattern * 0.015 * glassStripesIntensity;
+            gradientHighlight = smoothstep(0.3, 0.7, gradientHighlight); // Extra smooth
+            frostedColor += vec3(gradientHighlight * 0.4);
         }
         
         return frostedColor;
@@ -395,9 +409,17 @@ const fragmentShaderSource = `
         // Apply fluted glass UV displacement first (like the real implementation)
         if (filmEffect == 9) {
             float numSlices = glassStripesFrequency * 0.8;
-            float sliceProgress = fract(uv.x * numSlices);
-            float amplitude = 0.015; // Same as the real implementation
-            uv.x += amplitude * sin(sliceProgress * 6.28318530718) * (1.0 - 0.5 * abs(sliceProgress - 0.5));
+            float amplitude = 0.015 * glassStripesDistortion; // Make distortion amount controllable
+            
+            if (glassStripesDirection == 0) {
+                // Vertical flutes (distort along X axis based on Y position)
+                float sliceProgress = fract(uv.x * numSlices);
+                uv.x += amplitude * sin(sliceProgress * 6.28318530718) * (1.0 - 0.5 * abs(sliceProgress - 0.5));
+            } else {
+                // Horizontal flutes (distort along Y axis based on X position)
+                float sliceProgress = fract(uv.y * numSlices);
+                uv.y += amplitude * sin(sliceProgress * 6.28318530718) * (1.0 - 0.5 * abs(sliceProgress - 0.5));
+            }
         }
         
         // Apply lens distortion and pixelation effects to UV coordinates
@@ -998,6 +1020,8 @@ function setupShaders() {
     uniforms.watercolor = gl.getUniformLocation(program, 'watercolor');
     uniforms.glassStripesIntensity = gl.getUniformLocation(program, 'glassStripesIntensity');
     uniforms.glassStripesFrequency = gl.getUniformLocation(program, 'glassStripesFrequency');
+    uniforms.glassStripesDirection = gl.getUniformLocation(program, 'glassStripesDirection');
+    uniforms.glassStripesDistortion = gl.getUniformLocation(program, 'glassStripesDistortion');
     uniforms.toneMappingLUT = gl.getUniformLocation(program, 'toneMappingLUT');
     uniforms.brightness = gl.getUniformLocation(program, 'brightness');
     uniforms.contrast = gl.getUniformLocation(program, 'contrast');
@@ -1773,6 +1797,10 @@ function updateUniforms() {
     if (glassStripesFrequencyEl) {
         document.getElementById('glassStripesFrequencyValue').textContent = parseInt(glassStripesFrequencyEl.value);
     }
+    const glassStripesDistortionEl = document.getElementById('glassStripesDistortion');
+    if (glassStripesDistortionEl) {
+        document.getElementById('glassStripesDistortionValue').textContent = parseFloat(glassStripesDistortionEl.value).toFixed(1);
+    }
     
     // Show/hide controls based on selected effect
     const filmNoiseControl = document.getElementById('filmNoiseControl');
@@ -1784,6 +1812,8 @@ function updateUniforms() {
     const watercolorControl = document.getElementById('watercolorControl');
     const glassStripesIntensityControl = document.getElementById('glassStripesIntensityControl');
     const glassStripesFrequencyControl = document.getElementById('glassStripesFrequencyControl');
+    const glassStripesDirectionControl = document.getElementById('glassStripesDirectionControl');
+    const glassStripesDistortionControl = document.getElementById('glassStripesDistortionControl');
     const toneMappingControl = document.getElementById('toneMappingControl');
     
     if (filmNoiseControl) filmNoiseControl.style.display = filmEffectVal === 1 ? 'block' : 'none';
@@ -1795,6 +1825,8 @@ function updateUniforms() {
     if (watercolorControl) watercolorControl.style.display = filmEffectVal === 8 ? 'block' : 'none';
     if (glassStripesIntensityControl) glassStripesIntensityControl.style.display = filmEffectVal === 9 ? 'block' : 'none';
     if (glassStripesFrequencyControl) glassStripesFrequencyControl.style.display = filmEffectVal === 9 ? 'block' : 'none';
+    if (glassStripesDirectionControl) glassStripesDirectionControl.style.display = filmEffectVal === 9 ? 'block' : 'none';
+    if (glassStripesDistortionControl) glassStripesDistortionControl.style.display = filmEffectVal === 9 ? 'block' : 'none';
     if (toneMappingControl) toneMappingControl.style.display = filmEffectVal === 2 ? 'block' : 'none';
     
     // Set shader uniforms
@@ -1843,6 +1875,12 @@ function updateUniforms() {
     
     const glassStripesFrequency = parseFloat(document.getElementById('glassStripesFrequency').value);
     gl.uniform1f(uniforms.glassStripesFrequency, glassStripesFrequency);
+    
+    const glassStripesDirection = parseInt(document.getElementById('glassStripesDirection').value);
+    gl.uniform1i(uniforms.glassStripesDirection, glassStripesDirection);
+    
+    const glassStripesDistortion = parseFloat(document.getElementById('glassStripesDistortion').value);
+    gl.uniform1f(uniforms.glassStripesDistortion, glassStripesDistortion);
     
     const toneMappingLUT = parseInt(document.getElementById('toneMappingLUT').value);
     gl.uniform1i(uniforms.toneMappingLUT, toneMappingLUT);
@@ -1957,7 +1995,17 @@ function generateCurrentPresetCode() {
     // Add post-processing if not default values
     if (blendMode > 0 || filmEffect > 0 || filmNoiseIntensity > 0 || bloomIntensity > 0 || caAmount > 0 || lensDistortion !== 0 || pixelationSize > 1 || trailBlur > 0 || watercolor > 0 || toneMappingLUT > 0) {
         preset += `,\n        blendMode: ${blendMode}`;
-        if (filmEffect > 0) preset += `, filmEffect: ${filmEffect}`;
+        if (filmEffect > 0) {
+            preset += `, filmEffect: ${filmEffect}`;
+            // Add fluted glass effect parameters when fluted glass effect is active (filmEffect = 9)
+            if (filmEffect === 9) {
+                const glassStripesFrequency = parseFloat(document.getElementById('glassStripesFrequency').value);
+                const glassStripesIntensity = parseFloat(document.getElementById('glassStripesIntensity').value);
+                const glassStripesDirection = parseInt(document.getElementById('glassStripesDirection').value);
+                const glassStripesDistortion = parseFloat(document.getElementById('glassStripesDistortion').value);
+                preset += `, glassStripesFrequency: ${glassStripesFrequency}, glassStripesIntensity: ${glassStripesIntensity}, glassStripesDirection: ${glassStripesDirection}, glassStripesDistortion: ${glassStripesDistortion}`;
+            }
+        }
         if (filmNoiseIntensity > 0) preset += `, filmNoiseIntensity: ${filmNoiseIntensity.toFixed(3)}`;
         if (bloomIntensity > 0) preset += `, bloomIntensity: ${bloomIntensity}`;
         if (caAmount > 0) preset += `, caAmount: ${caAmount.toFixed(4)}`;
@@ -2052,6 +2100,12 @@ function loadPreset(presetName) {
     document.getElementById('phaseRandomness').value = preset.phaseRandomness ?? 0;
     document.getElementById('amplitudeVariation').value = preset.amplitudeVariation ?? 0;
     document.getElementById('directionDrift').value = preset.directionDrift ?? 0;
+
+    // Load fluted glass effect with defaults
+    document.getElementById('glassStripesFrequency').value = preset.glassStripesFrequency ?? 50;
+    document.getElementById('glassStripesIntensity').value = preset.glassStripesIntensity ?? 0.0;
+    document.getElementById('glassStripesDirection').value = preset.glassStripesDirection ?? 0;
+    document.getElementById('glassStripesDistortion').value = preset.glassStripesDistortion ?? 1.0;
 
     // Load post-processing settings with defaults for missing values
     document.getElementById('blendMode').value = preset.blendMode ?? 0;
