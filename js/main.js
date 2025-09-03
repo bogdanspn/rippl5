@@ -40,7 +40,7 @@ const fragmentShaderSource = `
     uniform float time;
     uniform float waveSpeed;
     uniform int blendMode;
-    uniform int filmEffect; // 0 = none, 1 = film noise, 2 = tone mapping, 3 = CA, 4 = bloom, 5 = lens distortion, 6 = pixelation, 7 = trail blur, 8 = watercolor
+    uniform int filmEffect; // 0 = none, 1 = film noise, 2 = tone mapping, 3 = CA, 4 = bloom, 5 = lens distortion, 6 = pixelation, 7 = trail blur, 8 = watercolor, 9 = glass stripes
     uniform float filmNoiseIntensity;
     uniform float bloomIntensity;
     uniform float caAmount;
@@ -48,6 +48,8 @@ const fragmentShaderSource = `
     uniform float pixelationSize;
     uniform float trailBlur;
     uniform float watercolor;
+    uniform float glassStripesIntensity;
+    uniform float glassStripesFrequency;
     uniform int toneMappingLUT; // LUT selection for tone mapping
     uniform int waveCount;
     uniform float waveAmplitude;
@@ -352,10 +354,53 @@ const fragmentShaderSource = `
         return bleeding;
     }
     
+    // Fluted Glass effect - pure distortion with optional soft banding
+    vec3 applyGlassStripes(vec3 color, vec2 uv) {
+        // The real distortion happens in main() by modifying UV coordinates
+        // Here we add optional soft banding and subtle frosting
+        
+        // Add very light frosting blur for glass effect
+        vec3 frostedColor = color;
+        vec3 blur = color * 0.5 + color * 0.5;
+        frostedColor = mix(color, blur, 0.15); // Very subtle frosting
+        
+        // Optional soft banding effect
+        if (glassStripesIntensity > 0.0) {
+            float numSlices = glassStripesFrequency * 0.8;
+            float sliceProgress = fract(uv.x * numSlices);
+            
+            // Create very soft sinusoidal shading with smooth transitions
+            float bandPattern = sin(sliceProgress * 6.28318530718);
+            
+            // Apply multiple smoothing functions for very soft transitions
+            bandPattern = smoothstep(-0.8, 0.8, bandPattern); // First smoothing
+            bandPattern = smoothstep(0.2, 0.8, bandPattern); // Second smoothing for even softer edges
+            
+            // Create very subtle brightness variation
+            float bandShading = (bandPattern - 0.5) * 0.08 * glassStripesIntensity; // Much softer effect
+            frostedColor *= (1.0 + bandShading);
+            
+            // Add even softer edge highlights for 3D feel
+            float edgeHighlight = abs(sin(sliceProgress * 6.28318530718 + 1.57)) * 0.02 * glassStripesIntensity;
+            edgeHighlight = smoothstep(0.7, 1.0, edgeHighlight); // Smooth the highlight
+            frostedColor += vec3(edgeHighlight * 0.3);
+        }
+        
+        return frostedColor;
+    }
+    
     void main() {
         vec2 uv = gl_FragCoord.xy / resolution.xy;
         
-        // Apply lens distortion and pixelation effects to UV coordinates first
+        // Apply fluted glass UV displacement first (like the real implementation)
+        if (filmEffect == 9) {
+            float numSlices = glassStripesFrequency * 0.8;
+            float sliceProgress = fract(uv.x * numSlices);
+            float amplitude = 0.015; // Same as the real implementation
+            uv.x += amplitude * sin(sliceProgress * 6.28318530718) * (1.0 - 0.5 * abs(sliceProgress - 0.5));
+        }
+        
+        // Apply lens distortion and pixelation effects to UV coordinates
         if (filmEffect == 5) {
             // Lens distortion - apply before any other coordinate transformations
             uv = applyLensDistortion(uv, lensDistortion);
@@ -636,6 +681,9 @@ const fragmentShaderSource = `
         } else if (filmEffect == 8) {
             // Watercolor Bleeding - soft color bleeding effects
             finalColor = applyWatercolor(finalColor, uv, watercolor);
+        } else if (filmEffect == 9) {
+            // Glass Morphism - frosted glass effect
+            finalColor = applyGlassStripes(finalColor, uv);
         }
         // Note: Lens distortion (5) and pixelation (6) are applied to UV coordinates at the start of main()
         
@@ -948,6 +996,8 @@ function setupShaders() {
     uniforms.pixelationSize = gl.getUniformLocation(program, 'pixelationSize');
     uniforms.trailBlur = gl.getUniformLocation(program, 'trailBlur');
     uniforms.watercolor = gl.getUniformLocation(program, 'watercolor');
+    uniforms.glassStripesIntensity = gl.getUniformLocation(program, 'glassStripesIntensity');
+    uniforms.glassStripesFrequency = gl.getUniformLocation(program, 'glassStripesFrequency');
     uniforms.toneMappingLUT = gl.getUniformLocation(program, 'toneMappingLUT');
     uniforms.brightness = gl.getUniformLocation(program, 'brightness');
     uniforms.contrast = gl.getUniformLocation(program, 'contrast');
@@ -1715,6 +1765,14 @@ function updateUniforms() {
     if (watercolorEl) {
         document.getElementById('watercolorValue').textContent = parseFloat(watercolorEl.value).toFixed(2);
     }
+    const glassStripesIntensityEl = document.getElementById('glassStripesIntensity');
+    if (glassStripesIntensityEl) {
+        document.getElementById('glassStripesIntensityValue').textContent = parseFloat(glassStripesIntensityEl.value).toFixed(1);
+    }
+    const glassStripesFrequencyEl = document.getElementById('glassStripesFrequency');
+    if (glassStripesFrequencyEl) {
+        document.getElementById('glassStripesFrequencyValue').textContent = parseInt(glassStripesFrequencyEl.value);
+    }
     
     // Show/hide controls based on selected effect
     const filmNoiseControl = document.getElementById('filmNoiseControl');
@@ -1724,6 +1782,8 @@ function updateUniforms() {
     const pixelationControl = document.getElementById('pixelationControl');
     const trailBlurControl = document.getElementById('trailBlurControl');
     const watercolorControl = document.getElementById('watercolorControl');
+    const glassStripesIntensityControl = document.getElementById('glassStripesIntensityControl');
+    const glassStripesFrequencyControl = document.getElementById('glassStripesFrequencyControl');
     const toneMappingControl = document.getElementById('toneMappingControl');
     
     if (filmNoiseControl) filmNoiseControl.style.display = filmEffectVal === 1 ? 'block' : 'none';
@@ -1733,6 +1793,8 @@ function updateUniforms() {
     if (pixelationControl) pixelationControl.style.display = filmEffectVal === 6 ? 'block' : 'none';
     if (trailBlurControl) trailBlurControl.style.display = filmEffectVal === 7 ? 'block' : 'none';
     if (watercolorControl) watercolorControl.style.display = filmEffectVal === 8 ? 'block' : 'none';
+    if (glassStripesIntensityControl) glassStripesIntensityControl.style.display = filmEffectVal === 9 ? 'block' : 'none';
+    if (glassStripesFrequencyControl) glassStripesFrequencyControl.style.display = filmEffectVal === 9 ? 'block' : 'none';
     if (toneMappingControl) toneMappingControl.style.display = filmEffectVal === 2 ? 'block' : 'none';
     
     // Set shader uniforms
@@ -1775,6 +1837,12 @@ function updateUniforms() {
     
     const watercolor = parseFloat(document.getElementById('watercolor').value);
     gl.uniform1f(uniforms.watercolor, watercolor);
+    
+    const glassStripesIntensity = parseFloat(document.getElementById('glassStripesIntensity').value);
+    gl.uniform1f(uniforms.glassStripesIntensity, glassStripesIntensity);
+    
+    const glassStripesFrequency = parseFloat(document.getElementById('glassStripesFrequency').value);
+    gl.uniform1f(uniforms.glassStripesFrequency, glassStripesFrequency);
     
     const toneMappingLUT = parseInt(document.getElementById('toneMappingLUT').value);
     gl.uniform1i(uniforms.toneMappingLUT, toneMappingLUT);
@@ -2216,6 +2284,8 @@ function randomize() {
     document.getElementById('pixelationSize').value = 1;
     document.getElementById('trailBlur').value = 0;
     document.getElementById('watercolor').value = 0;
+    document.getElementById('glassStripesIntensity').value = 0.0;
+    document.getElementById('glassStripesFrequency').value = 50;
     document.getElementById('toneMappingLUT').value = 0;
 
     // Generate and display palette name

@@ -310,6 +310,7 @@
                         <option value="6">Pixelation</option>
                         <option value="7">Trail/Motion Blur</option>
                         <option value="8">Watercolor Bleeding</option>
+                        <option value="9">Fluted Glass</option>
                     </select>
                 </div>
                 <div class="control" id="filmNoiseControl">
@@ -340,6 +341,14 @@
                 <div class="control" id="watercolorControl">
                     <label for="watercolor">Watercolor Bleeding <span class="value-display" id="watercolorValue">0.0</span></label>
                     <input type="range" id="watercolor" min="0.0" max="1.0" step="0.01" value="0.0" oninput="updateUniforms()">
+                </div>
+                <div class="control" id="glassStripesFrequencyControl">
+                    <label for="glassStripesFrequency">Segment Count <span class="value-display" id="glassStripesFrequencyValue">50</span></label>
+                    <input type="range" id="glassStripesFrequency" min="10" max="100" step="5" value="50" oninput="updateUniforms()">
+                </div>
+                <div class="control" id="glassStripesIntensityControl">
+                    <label for="glassStripesIntensity">Band Visibility <span class="value-display" id="glassStripesIntensityValue">0.0</span></label>
+                    <input type="range" id="glassStripesIntensity" min="0.0" max="1.0" step="0.1" value="0.0" oninput="updateUniforms()">
                 </div>
                 <div class="control" id="toneMappingControl">
                     <label for="toneMappingLUT">Tone Mapping LUT</label>
