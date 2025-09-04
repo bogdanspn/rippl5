@@ -2,6 +2,23 @@
 // This file contains all the predefined presets for the rippl5 visual generator
 
 const presets = {
+    "charcoal-glass": {
+        color1: '#2c2c2c', color2: '#404040', color3: '#1a1a1a', color4: '#595959',
+        color5: '#0b0909', color6: '#2d2d2d', color7: '#c0bfbf', color8: '#434343',
+        waveCount: 5, waveAmplitude: 0.6, waveZoom: 4.5, waveFrequency: 3,
+        waveTwirl: 0.006, twirlSources: 1, twirlLocation: 0, waveSpeed: 0.7,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 0.5, amplitudeVariation: 0.2, directionDrift: 0,
+        blendMode: 0, filmEffect: 9, glassStripesFrequency: 65, glassStripesIntensity: 0, glassStripesDirection: 0, glassStripesDistortion: 1.4,
+        brightness: 0, contrast: 1.46, saturation: 1.83
+    },
+    "bright-material": {
+        color1: '#583315', color2: '#2e84ca', color3: '#dbd778', color4: '#9a9eec',
+        color5: '#435c70', color6: '#85aea1', color7: '#bbbbb2', color8: '#796981',
+        waveCount: 16, waveAmplitude: 5.2, waveZoom: 2.6, waveFrequency: 0.1,
+        waveTwirl: 0.032, twirlSources: 6, twirlLocation: 1, waveSpeed: 0.3,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 2.3, amplitudeVariation: 0, directionDrift: 0.3,
+        blendMode: 0, filmEffect: 9, glassStripesFrequency: 80, glassStripesIntensity: 0, glassStripesDirection: 0, glassStripesDistortion: 1.2
+    },
     "honey-vortex": {
         color1: '#26216f', color2: '#acb628', color3: '#a86fd3', color4: '#c2eca2',
         color5: '#696c4c', color6: '#aa937e', color7: '#b5aebb', color8: '#748789',
