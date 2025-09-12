@@ -2,6 +2,23 @@
 // This file contains all the predefined presets for the rippl5 visual generator
 
 const presets = {
+    "glass-vortex": {
+        color1: '#0e0316', color2: '#4e0d08', color3: '#74116c', color4: '#5d198a',
+        color5: '#2d1111', color6: '#4d303a', color7: '#474d48', color8: '#14461d',
+        waveCount: 12, waveAmplitude: 1, waveZoom: 8.7, waveFrequency: 2.7,
+        waveTwirl: 0.160, twirlSources: 6, twirlLocation: 1, waveSpeed: 2.6,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 2, amplitudeVariation: 2.8, directionDrift: 0.8,
+        blendMode: 0, filmEffect: 9, glassStripesFrequency: 100, glassStripesIntensity: 0.5, glassStripesDirection: 0, glassStripesDistortion: 3,
+        brightness: 0, contrast: 1.46, saturation: 1.83
+    },
+    "rust-substance": {
+        color1: '#136971', color2: '#c74438', color3: '#5b96e9', color4: '#f4cd97',
+        color5: '#6d5755', color6: '#916d91', color7: '#a8b2c0', color8: '#849b84',
+        waveCount: 14, waveAmplitude: 6.4, waveZoom: 5.9, waveFrequency: 2.6,
+        waveTwirl: 0.154, twirlSources: 3, twirlLocation: 2, waveSpeed: 1.4,
+        turbulence: 0, noiseDisplacement: 0, phaseRandomness: 1.2, amplitudeVariation: 1.7, directionDrift: 1.6,
+        brightness: -0.19, contrast: 1.51, saturation: 2.1
+    },
     "charcoal-glass": {
         color1: '#2c2c2c', color2: '#404040', color3: '#1a1a1a', color4: '#595959',
         color5: '#0b0909', color6: '#2d2d2d', color7: '#c0bfbf', color8: '#434343',

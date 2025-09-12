@@ -1072,6 +1072,10 @@ function getUniformLocations(gl, program) {
         trailBlur: gl.getUniformLocation(program, 'trailBlur'),
         watercolor: gl.getUniformLocation(program, 'watercolor'),
         toneMappingLUT: gl.getUniformLocation(program, 'toneMappingLUT'),
+        glassStripesIntensity: gl.getUniformLocation(program, 'glassStripesIntensity'),
+        glassStripesFrequency: gl.getUniformLocation(program, 'glassStripesFrequency'),
+        glassStripesDirection: gl.getUniformLocation(program, 'glassStripesDirection'),
+        glassStripesDistortion: gl.getUniformLocation(program, 'glassStripesDistortion'),
         waveCount: gl.getUniformLocation(program, 'waveCount'),
         waveAmplitude: gl.getUniformLocation(program, 'waveAmplitude'),
         waveFrequency: gl.getUniformLocation(program, 'waveFrequency'),
@@ -2678,6 +2682,12 @@ function copyUniformsToRecordingCanvas(recordingGL, recordingUniforms) {
     recordingGL.uniform1f(recordingUniforms.trailBlur, parseFloat(document.getElementById('trailBlur').value));
     recordingGL.uniform1f(recordingUniforms.watercolor, parseFloat(document.getElementById('watercolor').value));
     recordingGL.uniform1i(recordingUniforms.toneMappingLUT, parseInt(document.getElementById('toneMappingLUT').value));
+    
+    // Glass effect uniforms
+    recordingGL.uniform1f(recordingUniforms.glassStripesIntensity, parseFloat(document.getElementById('glassStripesIntensity').value));
+    recordingGL.uniform1f(recordingUniforms.glassStripesFrequency, parseFloat(document.getElementById('glassStripesFrequency').value));
+    recordingGL.uniform1i(recordingUniforms.glassStripesDirection, parseInt(document.getElementById('glassStripesDirection').value));
+    recordingGL.uniform1f(recordingUniforms.glassStripesDistortion, parseFloat(document.getElementById('glassStripesDistortion').value));
     
     // Colors
     recordingGL.uniform3fv(recordingUniforms.color1, hexToRgb(document.getElementById('color1').value));
